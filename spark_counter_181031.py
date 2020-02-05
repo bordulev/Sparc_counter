@@ -113,15 +113,15 @@ def count_sparks():
             if line[8] == ' ':
                 extra_char = 0
             #print(line)
-            current += [float(line[0:8 + extra_char])]
-            day += [int(line[9 + extra_char:11 + extra_char])]
-            month += [int(line[12 + extra_char:14 + extra_char])]
-            year += [int(line[15 + extra_char:19 + extra_char])]
-            hour += [int(line[20 + extra_char:22 + extra_char])]
-            minute += [int(line[23 + extra_char:25 + extra_char])]
-            second += [int(line[26 + extra_char:28 + extra_char])]
-            msecond += [int(line[29 + extra_char:32 + extra_char])]
-            linenumber += [i]
+            current.append(float(line[0:8 + extra_char]))
+            day.append(int(line[9 + extra_char:11 + extra_char]))
+            month.append(int(line[12 + extra_char:14 + extra_char]))
+            year.append(int(line[15 + extra_char:19 + extra_char]))
+            hour.append(int(line[20 + extra_char:22 + extra_char]))
+            minute.append(int(line[23 + extra_char:25 + extra_char]))
+            second.append(int(line[26 + extra_char:28 + extra_char]))
+            msecond.append(int(line[29 + extra_char:32 + extra_char]))
+            linenumber.append(i)
             i += 1
             line = file_currents.read(extra_char)
             line = file_currents.read(34)
@@ -152,15 +152,15 @@ def count_sparks():
                 extra_char = 1
             if line[8] == ' ':
                 extra_char = 0
-            voltage += [float(line[0:8 + extra_char])]
-            vmon_day += [int(line[9 + extra_char:11 + extra_char])]
-            vmon_month += [int(line[12 + extra_char:14 + extra_char])]
-            vmon_year += [int(line[15 + extra_char:19 + extra_char])]
-            vmon_hour += [int(line[20 + extra_char:22 + extra_char])]
-            vmon_minute += [int(line[23 + extra_char:25 + extra_char])]
-            vmon_second += [int(line[26 + extra_char:28 + extra_char])]
-            vmon_msecond += [int(line[29 + extra_char:32 + extra_char])]
-            vmon_linenumber += [i]
+            voltage.append(float(line[0:8 + extra_char]))
+            vmon_day.append(int(line[9 + extra_char:11 + extra_char]))
+            vmon_month.append(int(line[12 + extra_char:14 + extra_char]))
+            vmon_year.append(int(line[15 + extra_char:19 + extra_char]))
+            vmon_hour.append(int(line[20 + extra_char:22 + extra_char]))
+            vmon_minute.append(int(line[23 + extra_char:25 + extra_char]))
+            vmon_second.append(int(line[26 + extra_char:28 + extra_char]))
+            vmon_msecond.append(int(line[29 + extra_char:32 + extra_char]))
+            vmon_linenumber.append(i)
             i += 1
             line  = file_voltages.read(extra_char)
             line = file_voltages.read(34)
@@ -170,14 +170,14 @@ def count_sparks():
         timedelta = time_period(i, 0) - time_period(0, 0)
         seconds = timedelta_total_seconds(timedelta)
         hours = seconds / 3600
-        time_hours_current += [hours]
+        time_hours_current.append(hours)
 
     #calculating the time scale (x-axes should be in hours) for voltages
     for i in range(0, len(voltage)):
         timedelta = time_period(i, 1) - time_period(0, 0)
         seconds = timedelta_total_seconds(timedelta)
         hours = seconds / 3600
-        time_hours_voltage += [hours]
+        time_hours_voltage.append(hours)
 
     #Find the Standby period, where the voltage is less than 1300
     standby_periods = []
@@ -208,8 +208,8 @@ def count_sparks():
         if HV_ready_foundflag == 0:
             if voltage[i] > 1400:
                 if voltage[i] > voltage[i+1]:
-                    HV_values_ready += [voltage[i]]
-                    HV_times_ready += [time_period(i,1)]
+                    HV_values_ready.append(voltage[i])
+                    HV_times_ready.append(time_period(i,1))
                     HV_ready_foundflag = 1
         if voltage[i] < 1400:
             HV_ready_foundflag = 0
@@ -253,8 +253,8 @@ def count_sparks():
     region_y = []
     for i in range(0, len(current)):
         if current[i] >= treshold_Nominal_HV:
-            region_y = region_y + [current[i]]      # Create the list of currents above treshold
-            region_x = region_x + [i]               # Create the number of dots above the treshold
+            region_y.append|(current[i])      # Create the list of currents above treshold
+            region_x.append(i)               # Create the number of dots above the treshold
             if i < (len(current) - 1):              # The process of separation of all area above the treshold on several parts, where the current is above the treshold
                 if (current [i+1] < treshold_Nominal_HV) or (i+1 == len(current) - 1):
                     if len(region_y) > 4:           # The minimal length of Nominal NV region should be achieved
@@ -270,7 +270,7 @@ def count_sparks():
         stoppoint = int(round(2*len(Nominal_HV_regions_y[j])/3))
         listwithouttrips = Nominal_HV_regions_y[j][startpoint:stoppoint]
         avgvalue = sum(listwithouttrips)/len(listwithouttrips)
-        listof_avgvalues += [avgvalue]
+        listof_avgvalues.append(avgvalue)
 
     #Correct the region above treshold. Almost the same procedure that the "Search for regions above treshold" but with the new condition
     Correct_Nominal_HV_regions_y = []
@@ -292,8 +292,8 @@ def count_sparks():
                 trip_level = 2.5
         for i in range(0, len(Nominal_HV_regions_y[j])):
             if Nominal_HV_regions_y[j][i] >= listof_avgvalues[j]/trip_level:    #New condition. All the points should be higher than the 1/3d of the first maximum point of Nominal_HV_region
-                region_y = region_y + [Nominal_HV_regions_y[j][i]]
-                region_x = region_x + [Nominal_HV_regions_x[j][i]]
+                region_y.append(Nominal_HV_regions_y[j][i])
+                region_x.append(Nominal_HV_regions_x[j][i])
                 if i < (len(Nominal_HV_regions_y[j]) - 1):
                     if (Nominal_HV_regions_y[j][i+1] < listof_avgvalues[j]/trip_level) or (i+1 == len(Nominal_HV_regions_y[j]) - 1): #New condition. If the point is lower than the 1/3d of the first maximum point of Nominal_HV_region, it doesn't go there, and the search of next NominalHV region starts
                         if len(region_y) > 4:
@@ -314,20 +314,20 @@ def count_sparks():
         if len(Correct_Nominal_HV_regions_y[j]) > 6:
             for i in range(0, len(Correct_Nominal_HV_regions_y[j]) - 1):     # Search in a certain region for start of the stable beam region
                 if  (Correct_Nominal_HV_regions_y[j][i] >  Correct_Nominal_HV_regions_y[j][i+1]) and (i != 0):
-                    region_y = region_y + [Correct_Nominal_HV_regions_y[j][i]]
-                    region_x = region_x + [Correct_Nominal_HV_regions_x[j][i]]
+                    region_y.append(Correct_Nominal_HV_regions_y[j][i])
+                    region_x.append(Correct_Nominal_HV_regions_x[j][i])
                     left_boarder_founded = 1
                     break                               # Stop to search, when it is founded
             if left_boarder_founded == 1:
                 for i in range(len(Correct_Nominal_HV_regions_y[j]) - 1, 0, -1): # Search in a certain region for stop of the stable beam region
                     if  Correct_Nominal_HV_regions_y[j][i] >  Correct_Nominal_HV_regions_y[j][i-1]:
                         if (Correct_Nominal_HV_regions_y[j][i]) - (Correct_Nominal_HV_regions_y[j][i-1]) < treshold_stable_beam:  #to prevent the end of fpeff to be at the spark peak
-                            region_y = region_y + [Correct_Nominal_HV_regions_y[j][i]]
-                            region_x = region_x + [Correct_Nominal_HV_regions_x[j][i]]
+                            region_y.append(Correct_Nominal_HV_regions_y[j][i])
+                            region_x.append(Correct_Nominal_HV_regions_x[j][i])
                             right_boarder_founded = 1
                         else:
-                            region_y = region_y + [Correct_Nominal_HV_regions_y[j][i-1]]
-                            region_x = region_x + [Correct_Nominal_HV_regions_x[j][i-1]]
+                            region_y.append(Correct_Nominal_HV_regions_y[j][i-1])
+                            region_x.append([Correct_Nominal_HV_regions_x[j][i-1])
                             right_boarder_founded = 1
                         if right_boarder_founded == 1:
                             break                               # Stop to search, when it is founded
@@ -351,7 +351,7 @@ def count_sparks():
             if diff > 0:
                 k += 1
         if len(HV_values_ready) != 0: #If there are some stable beams
-            Correct_HV_values_ready += [HV_values_ready[k-1]]
+            Correct_HV_values_ready.append(HV_values_ready[k-1])
     #print (len(Correct_HV_values_ready))
     if len(Correct_HV_values_ready) != 0:
         #Search for the sparks
@@ -461,16 +461,16 @@ def count_sparks():
                                     delta_time = (time_new_peak - time_previos_peak)*3600 #seconds
                                     if delta_time != 0:     # Sometimes to one sparks corresponds two inputs in database. This condition is needed to force it
                                         Amp = spark_current_peak - spark_baseline
-                                        sparks_amplitudes += [Amp]
-                                        sparks_amplitudes_hist += [Amp]
-                                        sparks_baseline_current += [spark_baseline]
-                                        sparks_time_differences += [delta_time]
-                                        sparks_time_differences_hist += [delta_time]
-                                        sparks_timestamp += [time_string(region_x[i])]
-                                        sparks_sector += [chamber]
+                                        sparks_amplitudes.append(Amp)
+                                        sparks_amplitudes_hist.append(Amp)
+                                        sparks_baseline_current.append(spark_baseline)
+                                        sparks_time_differences.append(delta_time)
+                                        sparks_time_differences_hist.append(delta_time)
+                                        sparks_timestamp.append(time_string(region_x[i]))
+                                        sparks_sector.append(chamber)
                                         #print (len(sparks_amplitudes))
-                                        sparks_layer += [layer]
-                                        sparks_HV += [Correct_HV_values_ready[j]]
+                                        sparks_layer.append(layer)
+                                        sparks_HV.append(Correct_HV_values_ready[j])
                                         time_previos_peak = time_new_peak
                                         count_local += 1
                                         first_spark_founded = 0
@@ -480,21 +480,21 @@ def count_sparks():
                     #This condition is needed to make an entry at the end of the run (AMP = -1)
                     elif i == len(region_y) - 1:
                         delta_time = (time_hours_current[region_x[i]] - time_previos_peak)*3600 #seconds
-                        sparks_sector += [chamber]
-                        sparks_layer += [layer]
-                        sparks_timestamp += [time_string(region_x[i])]
-                        sparks_amplitudes += [-1]
-                        sparks_baseline_current += [fit_func(time_hours_current[region_x[i]], func_type, Params)]
-                        sparks_time_differences += [delta_time]
+                        sparks_sector.append(chamber)
+                        sparks_layer.append(layer)
+                        sparks_timestamp.append(time_string(region_x[i]))
+                        sparks_amplitudes.append(-1)
+                        sparks_baseline_current.append(fit_func(time_hours_current[region_x[i]], func_type, Params))
+                        sparks_time_differences.append(delta_time)
                         if len(Correct_HV_values_ready) != 0: #If there are no stable beams at this period of time. There will be no data in Correct_HV_values_ready list
-                            sparks_HV += [Correct_HV_values_ready[j]]
+                            sparks_HV.append(Correct_HV_values_ready[j])
 
 
 
                 rate_local = count_local / (x2 - x1) #in hours
                 rate_local = round(rate_local,2) # round it by two digits after decimal point
-                period_rate_local += [rate_local]
-                list_of_datetimes += [time_period(stable_beams_x[j][2], 0)]
+                period_rate_local.append(rate_local)
+                list_of_datetimes.append(time_period(stable_beams_x[j][2], 0))
 
     if len(Correct_HV_values_ready) != 0:
     #Open file to write the results in it
