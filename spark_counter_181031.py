@@ -3,7 +3,7 @@
 import datetime
 from scipy.optimize import curve_fit
 from scipy.optimize import OptimizeWarning # In order to catch warnings, when the baseline can not be fitted by exp
-from matplotlib import dates
+#from matplotlib import dates
 from decimal import Decimal
 import math
 import warnings
@@ -13,6 +13,7 @@ def count_sparks():
     standby_current_level = 0
     current_name = "getDataSafely"
     voltage_name = "getDataSafely.1"
+    humidity = "getDataSafely.2"
     time_hours_current = []
     time_hours_voltage = []
     treshold_lvl = 2 #Treshold, above which the HV for the Nominal voltage level. Default = 2
@@ -253,7 +254,7 @@ def count_sparks():
     region_y = []
     for i in range(0, len(current)):
         if current[i] >= treshold_Nominal_HV:
-            region_y.append|(current[i])      # Create the list of currents above treshold
+            region_y.append(current[i])      # Create the list of currents above treshold
             region_x.append(i)               # Create the number of dots above the treshold
             if i < (len(current) - 1):              # The process of separation of all area above the treshold on several parts, where the current is above the treshold
                 if (current [i+1] < treshold_Nominal_HV) or (i+1 == len(current) - 1):
@@ -327,7 +328,7 @@ def count_sparks():
                             right_boarder_founded = 1
                         else:
                             region_y.append(Correct_Nominal_HV_regions_y[j][i-1])
-                            region_x.append([Correct_Nominal_HV_regions_x[j][i-1])
+                            region_x.append(Correct_Nominal_HV_regions_x[j][i-1])
                             right_boarder_founded = 1
                         if right_boarder_founded == 1:
                             break                               # Stop to search, when it is founded
