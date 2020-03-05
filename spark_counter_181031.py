@@ -11,11 +11,13 @@ import warnings
 def count_sparks():
     #position_Sector_layer = "AL01_L1"
     standby_current_level = 0
-    current_name = "getDataSafely"
-    voltage_name = "getDataSafely.1"
-    humidity = "getDataSafely.2"
+    current_name = "getDataSafely_I"
+    voltage_name = "getDataSafely_V"
+    humidity_name = "getDataSafely_H"
     time_hours_current = []
     time_hours_voltage = []
+    time_hours_humidity = []
+
     treshold_lvl = 2 #Treshold, above which the HV for the Nominal voltage level. Default = 2
     treshold_stable_beam = 2 #Treshold, above which there is a spark.
     treshold_stable_beam_higher_long_10 = 2
@@ -43,8 +45,9 @@ def count_sparks():
             return 1
         else:
             return n * factorial(n - 1)
-
+    
     # function, that returns the datetime parameter. Parameter == 0 for the file, that contains currents, Parameter == 1 for the file, that contains voltages
+    # Parameter = 2 for the file, that contatins humidity
     def time_period(number_of_point, parameter):
         if parameter == 0:
             time = datetime.datetime(year[number_of_point], month[number_of_point], day[number_of_point],
@@ -53,13 +56,25 @@ def count_sparks():
             time = datetime.datetime(vmon_year[number_of_point], vmon_month[number_of_point], vmon_day[number_of_point],
                                      vmon_hour[number_of_point], vmon_minute[number_of_point],
                                      vmon_second[number_of_point])
+        if parameter == 2:
+            time = datetime.datetime(humidity_year[number_of_point], humidity_month[number_of_point], humidity_day[number_of_point],
+                                     humidity_hour[number_of_point], humidity_minute[number_of_point], humidity_second[number_of_point])
+
         return time
 
     # Function, that return the text, corresponding to the date and time, when the event was registered
-    def time_string(number_of_point):
-        datetime = "{0}/{1}/{2} {3}:{4}:{5}".format("%04d" % year[number_of_point], "%02d" % month[number_of_point],
-                                                    "%02d" % day[number_of_point], "%02d" % hour[number_of_point],
-                                                    "%02d" % minute[number_of_point], "%02d" % second[number_of_point])
+    # Parameter == 0 for the file, that contains currents
+    # Parameter == 1 for the file, that contains voltages
+    # Parameter = 2 for the file, that contatins humidity
+    def time_string(number_of_point, parameter):
+        if parameter == 0:
+            datetime = "{0}/{1}/{2} {3}:{4}:{5}".format("%04d" % year[number_of_point], "%02d" % month[number_of_point],
+                                                        "%02d" % day[number_of_point], "%02d" % hour[number_of_point],
+                                                        "%02d" % minute[number_of_point], "%02d" % second[number_of_point])
+        if parameter == 2:
+            datetime = "{0}/{1}/{2} {3}:{4}:{5}".format("%04d" % humidity_year[number_of_point], "%02d" % humidity_month[number_of_point],
+                                                        "%02d" % humidity_day[number_of_point], "%02d" % humidity_hour[number_of_point],
+                                                        "%02d" % humidity_minute[number_of_point], "%02d" % humidity_second[number_of_point])
         return datetime
 
     def lin_func(x, a, b):
@@ -165,7 +180,39 @@ def count_sparks():
             i += 1
             line  = file_voltages.read(extra_char)
             line = file_voltages.read(34)
+            
+    humidity_value = []
+    humidity_year = []
+    humidity_month = []
+    humidity_day = []
+    humidity_hour = []
+    humidity_minute = []
+    humidity_second = []
+    humidity_msecond = []
+    humidity_timestamp = [] #in epoch
 
+    with open(humidity_name) as file_humidity:
+        #Read header
+        line = file_humidity.read(29)
+        #Read the rest of the file
+        line = file_humidity.read()
+        humidity_all_data = line.split(", ")
+        for humidity_one_vector_of_data in humidity_all_data:
+            humidity_one_vector_of_data_list = humidity_one_vector_of_data.split(" ")
+            humidity_value.append(float(humidity_one_vector_of_data_list[0]))
+            humidity_day.append(int(humidity_one_vector_of_data_list[1][0:2]))
+            humidity_month.append(int(humidity_one_vector_of_data_list[1][3:5]))
+            humidity_year.append(int(humidity_one_vector_of_data_list[1][6:10]))
+            humidity_hour.append(int(humidity_one_vector_of_data_list[2][0:2]))
+            humidity_minute.append(int(humidity_one_vector_of_data_list[2][3:5]))
+            humidity_second.append(int(humidity_one_vector_of_data_list[2][6:8]))
+            humidity_msecond.append(int(humidity_one_vector_of_data_list[2][9:12]))
+
+    #Fill the list with the timestamps (in epoch time) for Humidity values
+    for i in range(0, len(humidity_value)):
+        humidity_timestamp.append(time_period(i, 2))
+
+    
     #calculating the time scale (x-axes should be in hours) for currents
     for i in range(0, len(current)):
         timedelta = time_period(i, 0) - time_period(0, 0)
@@ -368,6 +415,8 @@ def count_sparks():
         sparks_timestamp = [] #When the spark occured
         sparks_baseline_current = []
         sparks_HV = []
+        sparks_humidity_value = []
+        sparks_humidity_timestamp = []  #in nice format
         menStd = [] #the list for error bars for sparks rate
 
         #print (stable_beams_x[0])
@@ -467,7 +516,13 @@ def count_sparks():
                                         sparks_baseline_current.append(spark_baseline)
                                         sparks_time_differences.append(delta_time)
                                         sparks_time_differences_hist.append(delta_time)
-                                        sparks_timestamp.append(time_string(region_x[i]))
+                                        sparks_timestamp.append(time_string(region_x[i], 0))
+                                        #Define the time and the value of Humidity, corresponding to the spark
+                                        #Find the point in humidity data, that is closest by time to the one time of the spark
+                                        humid_closest_point_num = min(range(len(humidity_timestamp)), key=lambda humid_point_num: abs(humidity_timestamp[humid_point_num]-time_period(region_x[i], 0)))
+                                        #Fill the closest value and time of hyumidity to the corresponding lists
+                                        sparks_humidity_timestamp.append(time_string(humid_closest_point_num, 2))
+                                        sparks_humidity_value.append(humidity_value[humid_closest_point_num])
                                         sparks_sector.append(chamber)
                                         #print (len(sparks_amplitudes))
                                         sparks_layer.append(layer)
@@ -475,16 +530,20 @@ def count_sparks():
                                         time_previos_peak = time_new_peak
                                         count_local += 1
                                         first_spark_founded = 0
-                                        # Print the data for the user: Chamber layer timestamp Amp Baseline Timediff HV
-                                        print_str_to_terminal = str(chamber)+"             "+str(layer)+"            "+str(time_string(region_x[i]))+"        "+("%.2f" % Amp)+"             "+("%.2f" % spark_baseline)+"             "+("%.1f" % delta_time)+"             "+str(Correct_HV_values_ready[j])
+                                        # Print the data for the user: Chamber layer timestamp Amp Baseline Timediff HV Humidity_value_Humidity_timestamp
+                                        print_str_to_terminal = str(chamber)+"             "+str(layer)+"            "+str(time_string(region_x[i], 0))+"        "+("%.2f" % Amp)+"             "+("%.2f" % spark_baseline)+"             "+("%.1f" % delta_time)+"             "+str(Correct_HV_values_ready[j])
                                         print (print_str_to_terminal)
                     #This condition is needed to make an entry at the end of the run (AMP = -1)
                     elif i == len(region_y) - 1:
                         delta_time = (time_hours_current[region_x[i]] - time_previos_peak)*3600 #seconds
                         sparks_sector.append(chamber)
                         sparks_layer.append(layer)
-                        sparks_timestamp.append(time_string(region_x[i]))
+                        sparks_timestamp.append(time_string(region_x[i], 0))
                         sparks_amplitudes.append(-1)
+                        #Define the time and the value of Humidity, corresponding to the spark
+                        humid_closest_point_num = min(range(len(humidity_timestamp)), key=lambda humid_point_num: abs(humidity_timestamp[humid_point_num]-time_period(region_x[i], 0)))
+                        sparks_humidity_timestamp.append(time_string(humid_closest_point_num, 2))
+                        sparks_humidity_value.append(humidity_value[humid_closest_point_num])
                         sparks_baseline_current.append(fit_func(time_hours_current[region_x[i]], func_type, Params))
                         sparks_time_differences.append(delta_time)
                         if len(Correct_HV_values_ready) != 0: #If there are no stable beams at this period of time. There will be no data in Correct_HV_values_ready list
@@ -496,13 +555,13 @@ def count_sparks():
                 rate_local = round(rate_local,2) # round it by two digits after decimal point
                 period_rate_local.append(rate_local)
                 list_of_datetimes.append(time_period(stable_beams_x[j][2], 0))
-
+    
     if len(Correct_HV_values_ready) != 0:
     #Open file to write the results in it
         filename = Path_to_results + ".txt"
         file = open(filename,"a+")
         for i in range(0, len(sparks_amplitudes)):
-            print_str = str(sparks_sector[i])+"             "+str(sparks_layer[i])+"            "+str(sparks_timestamp[i])+"        "+("%.2f" % sparks_amplitudes[i])+"             "+("%.2f" % sparks_baseline_current[i])+"             "+("%.1f" % sparks_time_differences[i])+"             " + str(sparks_HV[i])
+            print_str = str(sparks_sector[i])+"             "+str(sparks_layer[i])+"            "+str(sparks_timestamp[i])+"        "+("%.2f" % sparks_amplitudes[i])+"             "+("%.2f" % sparks_baseline_current[i])+"             "+("%.1f" % sparks_time_differences[i])+"             " + str(sparks_HV[i]) + "             " + str(sparks_humidity_value[i]) + "             " + str(sparks_humidity_timestamp[i]) 
             file.write(print_str)
             file.write("\n")
         file.close()

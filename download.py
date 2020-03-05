@@ -23,14 +23,25 @@ def download_data(chamber, layer, year_start, month_start, day_start, hour_start
             added_suffix = ' '
         if EA_or_HV == 'EA':
             added_suffix = ' HV '
-        for s, e in perdelta(date(year_start, month_start - 1, day_start), date(year_stop, month_stop - 1, day_stop), timedelta(days=30)):
-            cmd = 'wget --post-data "queryInfo=atlas_pvssCSC, comment_, CSC PS ' + EA_or_HV + ' ' + chamber + ' ' + layer + added_suffix + data_type + s.strftime("%d-%m-%Y") + ' ' + hour_start + ':' + minute_start + ', ' + e.strftime("%d-%m-%Y") + ' ' + hour_stop + ':' + minute_stop + ', , , , , ,no, , +7!" ' + url
-            os.system(cmd)
+        if (data_type == 'Imon, ') | (data_type == 'Vmon, '):
+            for s, e in perdelta(date(year_start, month_start - 1, day_start), date(year_stop, month_stop - 1, day_stop), timedelta(days=30)):
+                cmd = 'wget --post-data "queryInfo=atlas_pvssCSC, comment_, CSC PS ' + EA_or_HV + ' ' + chamber + ' ' + layer + added_suffix + data_type + s.strftime("%d-%m-%Y") + ' ' + hour_start + ':' + minute_start + ', ' + e.strftime("%d-%m-%Y") + ' ' + hour_stop + ':' + minute_stop + ', , , , , ,no, , +7!" ' + url
+                os.system(cmd)
+
+        #To download current or humidity
+        if (data_type == 'Humidity'):
+            for s, e in perdelta(date(year_start, month_start - 1, day_start), date(year_stop, month_stop - 1, day_stop), timedelta(days=30)):
+                cmd = 'wget --post-data "queryInfo=atlas_pvssCSC, comment_, CSC GAS Humidifier Humidity, ' + s.strftime("%d-%m-%Y") + ' ' + hour_start + ':' + minute_start + ', ' + e.strftime("%d-%m-%Y") + ' ' + hour_stop + ':' + minute_stop + ', , , , , ,no, , +7!" ' + url
+                os.system(cmd)
 
     url = 'http://atlas-ddv.cern.ch:8089/multidata/getDataSafely'
     # downoald Imon
     downoload_one_peace_of_data('Imon, ', EA_or_HV)
+    os.rename("getDataSafely", 'getDataSafely_I') 
     # downoald Vmon
     downoload_one_peace_of_data('Vmon, ', EA_or_HV)
-
+    os.rename("getDataSafely", 'getDataSafely_V')
+    # download Humidity
+    downoload_one_peace_of_data('Humidity', EA_or_HV)
+    os.rename("getDataSafely", 'getDataSafely_H') 
 
