@@ -1,5 +1,0 @@
-
-Run it:
-  time launch.sh > output/out.$DATE.log 2>&1 &
-
-

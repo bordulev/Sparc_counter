@@ -25,7 +25,7 @@ def count_sparks():
     treshold_stable_beam_lower_10 = 1
     trip_level = 1.5 #how many times trip should be lower than the right boarder to be trip
     plot_length = 50
-    Path_to_results = 'result'
+    Path_to_results = '/afs/cern.ch/user/i/ibordule/prod/Sparkcounter/output/database_txt/finalbase'
     Nominal_HV_regions_y = []
     Nominal_HV_regions_x = []
     stable_beams_y = []
@@ -561,7 +561,7 @@ def count_sparks():
         filename = Path_to_results + ".txt"
         file = open(filename,"a+")
         for i in range(0, len(sparks_amplitudes)):
-            print_str = str(sparks_sector[i])+"             "+str(sparks_layer[i])+"            "+str(sparks_timestamp[i])+"        "+("%.2f" % sparks_amplitudes[i])+"             "+("%.2f" % sparks_baseline_current[i])+"             "+("%.1f" % sparks_time_differences[i])+"             " + str(sparks_HV[i]) + "             " + str(sparks_humidity_value[i]) + "             " + str(sparks_humidity_timestamp[i]) 
+            print_str = str(sparks_sector[i])+"             "+str(sparks_layer[i])+"            "+str(sparks_timestamp[i])+"        "+("%.2f" % sparks_amplitudes[i])+"             "+("%.2f" % sparks_baseline_current[i])+"             "+("%.1f" % sparks_time_differences[i])+"             " + str(sparks_HV[i]) + "             " + str(sparks_humidity_value[i]) 
             file.write(print_str)
             file.write("\n")
         file.close()

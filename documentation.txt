@@ -1,0 +1,38 @@
+This software uses: Python 2.7.5 interpreter and ROOT 6.18/04 package. 
+
+This software is aimed to register the sparks of the current in CSC chambers of ATLAS muon detector.
+This product is divided on two modules:
+    1. The first module (/Spark_analyser) works as follows:
+        - gets the information about current date;
+        - downloads data on voltage, current and humidity in CSC chambers for the last 24 hours;
+        - analises this data;
+        - stores information on sparks in text database (/Sparkcounter/output/database_txt/finalbase.txt);
+       There are two types of events, that stored in this database: current sparks and ends of the run.
+       In case of current spark, the amplitude is > 0, in case of end of the run the amplitude is equal to -1.
+       The structure of finalbase.txt is following:
+        - 1st column is number of CSC chamber;
+        - 2nd column is number of layer in this chamber;
+        - 3rd column is date and time of the event;
+        - 4th column is amplitude of the event (in case of end of run it is -1) [micoAmps] above baseline;
+        - 5th column is baseline current at the moment of event [micoAmps];
+        - 6th column is time difference between this event and previous event [seconds];
+        - 7th column is voltage, at which chamber was operated during the event [Volts];
+        - 8th column is the humidity level, when the event occurs [ppm].
+        This database is appended by new events every time, when the code is run.
+
+    2. The second module (/CSC_database_txt_to_root) is aimed to convert the .txt database to the .root tree (/Sparkcounter/output/database_root) for futher analysis. 
+       All the branches in root database duplicate columns in txt database. 
+       ChamberNumber branch is organised by the rule of the OHP ACR histograms: negative values correspond to C-side, while positive correspond to A-side.
+       The branch of time of each event is represented in two ways:
+       - the branch timeYMD uses the format YY.YYMMDD;
+       - the branch dateTime is represented in seconds since epoch time (01.01.1970);
+
+How to run the code:
+    1. Before the first run of the code, some corrections  should be done:
+        1.1 Change the year to the current year of analysis in /Sparkcounter/Spark_analyser/launch_cmd.py (line 13);
+        1.2 Define the paths of inputs and outputs:
+            1.2.1 /Sparkcounter/CSC_database_txt_to_root/CSC_ParseFilesConvertor.cxx (line 16 and 18);
+            1.2.2 /afs/cern.ch/user/i/ibordule/prod/Sparkcounter/Spark_analyser/spark_counter_181031.py  (line 28);
+        1.3 Define the paths to the Sparkcounter/Spark_analyser and /Sparkcounter/CSC_database_txt_to_root in the cron.sh file (lines 5 and 9);
+    2. To run the code use the command ./cron.sh;
+       This file should be run as a cron job every day to append the database.
